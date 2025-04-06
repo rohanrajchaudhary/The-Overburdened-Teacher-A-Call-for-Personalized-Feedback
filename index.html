@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced AI Learning Assistant Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @font-face {
+        font-family: 'LucideIcons';
+        src: url('https://cdn.jsdelivr.net/npm/lucide-static@latest/font/Lucide.ttf') format('truetype');
+      }
+      .lucide {
+        font-family: 'LucideIcons';
+        font-size: 1.1rem; /* Adjusted size for sidebar */
+        line-height: 1;
+        display: inline-block;
+        vertical-align: middle; /* Align icons with text */
+      }
+      /* Icon content mapping (Add more as needed) */
+      .icon-home:before { content: "\027b"; } /* Home */
+      .icon-graduation-cap:before { content: "\0546"; } /* Graduation Cap (Tutorials) */
+      .icon-message-circle:before { content: "\032a"; } /* Message Circle (Chat) */
+      .icon-book-open:before { content: "\00d3"; } /* Book Open (Resources) */
+      .icon-bar-chart-2:before { content: "\0074"; } /* Bar Chart 2 (Progress) */
+      .icon-users:before { content: "\050b"; } /* Users (Collaboration) */
+      .icon-compass:before { content: "\0198"; } /* Compass (Learning Path) */
+      .icon-award:before { content: "\0061"; } /* Award (Gamification) */
+      .icon-edit:before { content: "\01d7"; } /* Edit (Grading Assistant) */
+      .icon-check-circle:before { content: "\016f"; } /* Check Circle */
+      .icon-file-text:before { content: "\020c"; } /* File Text */
+      .icon-clipboard-check:before { content: "\017f"; } /* Clipboard Check */
+      .icon-message-square-text:before { content: "\032d"; } /* Message Square Text */
+      .icon-loader:before { content: "\02f9"; } /* Loader */
+      .icon-alert-triangle:before { content: "\002b"; } /* Alert Triangle */
+      .icon-server:before { content: "\044c"; } /* Server Icon for backend note */
+      .icon-send:before { content: "\0449"; } /* Send */
+      .icon-badge-check:before { content: "\0068"; } /* Badge Check */
+      .icon-star:before { content: "\048f"; } /* Star */
+      .icon-chevron-right:before { content: "\0176"; } /* Chevron Right */
+      .icon-x:before { content: "\0517"; } /* X (Close) */
+
+
+      /* Basic animation for loader */
+      .spin {
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+
+      /* Basic styling for chat */
+      .chat-bubble {
+        max-width: 75%;
+        padding: 8px 12px;
+        border-radius: 10px;
+        margin-bottom: 8px;
+      }
+      .chat-bubble.user {
+        background-color: #dbeafe; /* blue-100 */
+        align-self: flex-end;
+        border-bottom-right-radius: 2px;
+      }
+      .chat-bubble.ai {
+        background-color: #e5e7eb; /* gray-200 */
+        align-self: flex-start;
+         border-bottom-left-radius: 2px;
+      }
+
+      /* Ensure main content area scrolls if needed */
+      .main-content {
+        max-height: calc(100vh - 4rem); /* Adjust based on header/footer height if any */
+        overflow-y: auto;
+      }
+
+      /* Sidebar transition */
+      #sidebar {
+          transition: transform 0.3s ease-in-out;
+      }
+      @media (max-width: 768px) {
+          #sidebar {
+              transform: translateX(-100%);
+              position: fixed;
+              z-index: 40; /* Ensure sidebar is above content */
+              height: 100%;
+          }
+          #sidebar.open {
+              transform: translateX(0);
+          }
+          #content {
+              margin-left: 0; /* Full width on mobile */
+          }
+          #sidebar-overlay {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 30;
+          }
+          #sidebar.open + #sidebar-overlay {
+            display: block; /* Show overlay when sidebar is open */
+          }
+      }
+
+
+    </style>
+    <script>
+        // Configure Tailwind CSS
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-gray-100 font-sans flex h-screen overflow-hidden">
+
+    <aside id="sidebar" class="w-64 bg-gradient-to-b from-indigo-700 to-blue-800 text-white p-4 space-y-2 flex flex-col shadow-lg md:translate-x-0">
+        <h1 class="text-2xl font-bold mb-6 pb-2 border-b border-indigo-500 text-center">Learning Assistant</h1>
+        <nav class="flex-grow space-y-1">
+            <a href="#" data-section="dashboard" class="nav-link flex items-center px-3 py-2 rounded hover:bg-indigo-600 active:bg-blue-600 transition duration-150">
+                <span class="lucide icon-home mr-3"></span> Dashboard
+            </a>
+            <a href="#" data-section="tutorials" class="nav-link flex items-center px-3 py-2 rounded hover:bg-indigo-600 active:bg-blue-600 transition duration-150">
+                <span class="lucide icon-graduation-cap mr-3"></span> Tutorials
+            </a>
+             <a href="#" data-section="grading" class="nav-link flex items-center px-3 py-2 rounded hover:bg-indigo-600 active:bg-blue-600 transition duration-150">
+                <span class="lucide icon-edit mr-3"></span> Grading Assistant
+            </a>
+            <a href="#" data-section="resources" class="nav-link flex items-center px-3 py-2 rounded hover:bg-indigo-600 active:bg-blue-600 transition duration-150">
+                <span class="lucide icon-book-open mr-3"></span> Resources
+            </a>
+            <a href="#" data-section="progress" class="nav-link flex items-center px-3 py-2 rounded hover:bg-indigo-600 active:bg-blue-600 transition duration-150">
+                <span class="lucide icon-bar-chart-2 mr-3"></span> Progress Tracker
+            </a>
+            <a href="#" data-section="collaboration" class="nav-link flex items-center px-3 py-2 rounded hover:bg-indigo-600 active:bg-blue-600 transition duration-150">
+                <span class="lucide icon-users mr-3"></span> Collaboration
+            </a>
+            <a href="#" data-section="learning-path" class="nav-link flex items-center px-3 py-2 rounded hover:bg-indigo-600 active:bg-blue-600 transition duration-150">
+                <span class="lucide icon-compass mr-3"></span> Learning Path
+            </a>
+            <a href="#" data-section="gamification" class="nav-link flex items-center px-3 py-2 rounded hover:bg-indigo-600 active:bg-blue-600 transition duration-150">
+                <span class="lucide icon-award mr-3"></span> Gamification
+            </a>
+        </nav>
+        <div class="text-xs text-indigo-200 mt-auto text-center">
+             &copy; 2025 AI Assistant 
+        </div>
+    </aside>
+
+    <div id="sidebar-overlay"></div>
+
+
+    <main id="content" class="flex-1 flex flex-col overflow-hidden">
+        <header class="bg-white shadow-sm p-4 flex justify-between items-center">
+             <button id="menu-toggle" class="md:hidden p-2 text-gray-600 hover:text-indigo-600">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+            <h2 id="section-title" class="text-xl font-semibold text-gray-700">Dashboard</h2>
+            <button id="chat-button" class="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 shadow">
+                <span class="lucide icon-message-circle"></span>
+            </button>
+        </header>
+
+        <div class="flex-1 p-6 overflow-y-auto main-content bg-gradient-to-br from-blue-50 to-indigo-100">
+
+            <section id="dashboard-section" class="content-section">
+                <h3 class="text-2xl font-semibold text-gray-800 mb-4">Welcome Back!</h3>
+                <p class="text-gray-600 mb-6">Here's a quick overview of your learning journey.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <h4 class="font-semibold text-indigo-600 mb-2">Next Suggested Topic</h4>
+                        <p class="text-gray-700">Introduction to Calculus</p>
+                        <a href="#" data-section="tutorials" class="nav-link text-sm text-blue-500 hover:underline mt-2 inline-block">Start Learning <span class="lucide icon-chevron-right text-xs"></span></a>
+                    </div>
+                     <div class="bg-white p-4 rounded-lg shadow">
+                        <h4 class="font-semibold text-teal-600 mb-2">Points Earned</h4>
+                        <p class="text-3xl font-bold text-gray-700">150 <span class="lucide icon-star text-yellow-500 text-xl"></span></p>
+                        <a href="#" data-section="gamification" class="nav-link text-sm text-blue-500 hover:underline mt-2 inline-block">View Badges <span class="lucide icon-chevron-right text-xs"></span></a>
+                    </div>
+                     <div class="bg-white p-4 rounded-lg shadow">
+                        <h4 class="font-semibold text-purple-600 mb-2">Modules Completed</h4>
+                        <p class="text-3xl font-bold text-gray-700">2 / 5</p>
+                         <a href="#" data-section="progress" class="nav-link text-sm text-blue-500 hover:underline mt-2 inline-block">See Progress <span class="lucide icon-chevron-right text-xs"></span></a>
+                    </div>
+                </div>
+                 <div class="mt-8 bg-white p-6 rounded-lg shadow">
+                     <h4 class="text-xl font-semibold text-gray-700 mb-4">Quick Actions</h4>
+                     <div class="flex flex-wrap gap-4">
+                         <button data-section="grading" class="nav-link bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg shadow flex items-center">
+                            <span class="lucide icon-edit mr-2"></span> Grade Assignment
+                         </button>
+                         <button data-section="tutorials" class="nav-link bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg shadow flex items-center">
+                            <span class="lucide icon-graduation-cap mr-2"></span> Browse Tutorials
+                         </button>
+                          <button id="quick-chat-button" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow flex items-center">
+                            <span class="lucide icon-message-circle mr-2"></span> Ask a Question
+                         </button>
+                     </div>
+                 </div>
+            </section>
+
+            <section id="tutorials-section" class="content-section hidden">
+                <h3 class="text-2xl font-semibold text-gray-800 mb-6">Interactive Tutorials</h3>
+                <div class="space-y-4">
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <h4 class="text-lg font-semibold text-indigo-700 mb-2">Algebra Basics</h4>
+                        <p class="text-gray-600 mb-3">Learn about variables, equations, and basic operations.</p>
+                        <button class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-1 rounded text-sm">Start Module</button>
+                        <button class="ml-2 border border-indigo-500 text-indigo-500 hover:bg-indigo-50 px-4 py-1 rounded text-sm">Take Quiz</button>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <h4 class="text-lg font-semibold text-indigo-700 mb-2">Essay Writing Fundamentals</h4>
+                        <p class="text-gray-600 mb-3">Structure your arguments, craft introductions, and write compelling conclusions.</p>
+                        <button class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-1 rounded text-sm">Start Module</button>
+                        <button class="ml-2 border border-indigo-500 text-indigo-500 hover:bg-indigo-50 px-4 py-1 rounded text-sm">Submit Practice Essay</button>
+                    </div>
+                     </div>
+            </section>
+
+            <section id="grading-section" class="content-section hidden">
+                 <div class="bg-white rounded-xl shadow-xl p-6 md:p-8 w-full max-w-4xl mx-auto">
+                    <h3 class="text-2xl font-semibold text-gray-800 mb-6 text-center">AI Grading Assistant</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div>
+                            <label for="studentSubmission" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                <span class="lucide icon-file-text mr-2 text-indigo-600"></span> Student Assignment Submission
+                            </label>
+                            <textarea id="studentSubmission" rows="10" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 ease-in-out resize-none" placeholder="Paste the student's assignment text here..."></textarea>
+                        </div>
+                        <div>
+                            <label for="rubric" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                <span class="lucide icon-clipboard-check mr-2 text-teal-600"></span> Grading Rubric / Key Points
+                            </label>
+                            <textarea id="rubric" rows="10" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out resize-none" placeholder="Enter the grading criteria, keywords, or correct answer points..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="text-center mb-8">
+                        <button id="gradeButton" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-0.5 flex items-center justify-center mx-auto">
+                            <span id="buttonText">Grade & Generate Feedback</span>
+                            <span id="buttonLoader" class="lucide icon-loader ml-2 spin hidden"></span>
+                        </button>
+                    </div>
+
+                    <div id="outputSection" class="bg-gray-50 p-6 rounded-lg border border-gray-200 hidden">
+                         <h4 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                            <span class="lucide icon-check-circle mr-2 text-green-600"></span> AI Grading Results
+                         </h4>
+                         <div class="mb-4">
+                             <h5 class="text-sm font-medium text-gray-600 mb-1">AI Suggested Grade:</h5>
+                             <p id="gradeOutput" class="text-lg font-semibold text-indigo-700 bg-indigo-100 p-2 rounded-md inline-block"></p>
+                         </div>
+                         <div>
+                             <h5 class="text-sm font-medium text-gray-600 mb-1 flex items-center">
+                                 <span class="lucide icon-message-square-text mr-2 text-blue-600"></span> AI Generated Personalized Feedback:
+                             </h5>
+                             <p id="feedbackOutput" class="text-gray-700 bg-blue-50 p-3 rounded-md whitespace-pre-wrap"></p>
+                         </div>
+                    </div>
+
+                    <div id="errorMessage" class="mt-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg hidden flex items-center">
+                        <span class="lucide icon-alert-triangle mr-2"></span>
+                        <span id="errorText"></span>
+                    </div>
+
+                     <div class="text-xs text-gray-500 text-center mt-8 border-t pt-4 border-gray-200">
+                        <p class="flex items-center justify-center mb-1">
+                            <span class="lucide icon-server mr-1 text-orange-600"></span>
+                            <strong class="text-gray-600 mr-1">Backend Required:</strong>We will Integrate the real Gemini API.
+                        </p>
+                        <p>
+                            *This demo <strong class="text-gray-600">simulates</strong> the interaction. The grading and feedback are generated by basic front-end logic, not an actual AI call.*
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="resources-section" class="content-section hidden">
+                <h3 class="text-2xl font-semibold text-gray-800 mb-6">Resource Recommendations</h3>
+                <div class="space-y-4">
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <h4 class="text-lg font-semibold text-teal-700 mb-2">Calculus Resources</h4>
+                        <ul class="list-disc list-inside text-gray-600 space-y-1">
+                            <li><a href="https://youtu.be/EKvHQc3QEow?si=GGie4teDjUNyy9MQ" class="text-blue-600 hover:underline">Khan Academy: Calculus Introduction (Video)</a></li>
+                            <li><a href="https://tutorial.math.lamar.edu/classes/calci/calci.aspx" class="text-blue-600 hover:underline">Paul's Online Math Notes: Calculus I (Article)</a></li>
+                            <li><a href="https://youtu.be/WUvTyaaNkzM?si=Bkajb-U7o1_o4tmr" class="text-blue-600 hover:underline">3Blue1Brown: Essence of Calculus (Video Series)</a></li>
+                            <li><a href="https://youtu.be/cIVpemcoAlY?si=mGsykSIyYRn3ZsCM" class="text-blue-600 hover:underline">PatrickJMT: Calculus Tutorials (YouTube)</a></li>
+                            <li><a href="https://youtu.be/7K1sB05pE0A?si=E4Y-WgNGdtATgOs5" class="text-blue-600 hover:underline">MIT OpenCourseWare: Single Variable Calculus (Course)</a></li>
+                            
+                            
+                         
+                        </ul>
+                    </div>
+                     <div class="bg-white p-4 rounded-lg shadow">
+                        <h4 class="text-lg font-semibold text-teal-700 mb-2">Essay Writing Resources</h4>
+                        <ul class="list-disc list-inside text-gray-600 space-y-1">
+                            <li><a href="https://owl.purdue.edu/owl/general_writing/academic_writing/essay_writing/index.html" class="text-blue-600 hover:underline">Purdue OWL: Essay Writing (Guide)</a></li>
+                             <li><a href="https://www.grammarly.com/blog/?msockid=36833125dfe167e62fb025e2de0966cb" class="text-blue-600 hover:underline">Grammarly Blog: Writing Tips (Articles)</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-lg shadow">
+                      <h4 class="text-lg font-semibold text-teal-700 mb-2">Computer Science</h4>
+                      <ul class="list-disc list-inside text-gray-600 space-y-1">
+                          <li><a href="https://youtu.be/GNRH7ZFR-sE?si=Rd-s_S0dwIrKmSEn" class="text-blue-600 hover:underline">Basics Of Computer Science</a></li>
+                           <li><a href="https://youtu.be/rQoqCP7LX60?si=xcCOQF2CeiiuPfyA" class="text-blue-600 hover:underline">Basics Of All C-Programming Language</a></li>
+                           <li><a href="https://youtu.be/e7sAf4SbS_g?si=sCTz9BDzUqaY91kp" class="text-blue-600 hover:underline">Basics Of All C++ -Programming Language</a></li>
+                           <li><a href="https://youtu.be/y3OOaXrFy-Q?si=6bE0UQP4CxOQCd04" class="text-blue-600 hover:underline">Full DSA Coarse</a></li>
+                      </ul>
+                  </div>
+
+                  <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="text-lg font-semibold text-teal-700 mb-2">Core Computer Science Subjects</h4>
+                    <ul class="list-disc list-inside text-gray-600 space-y-1">
+                        <li><a href="https://youtu.be/FchQ6wZVqsA?si=LlSummT-QWdZ-S4V" class="text-blue-600 hover:underline">DBMS</a></li>
+                         <li><a href="https://youtu.be/DsK35f8wyUw?si=xAHZAMu3hnOWVUbs" class="text-blue-600 hover:underline">CSA</a></li>
+                         <li><a href="https://youtu.be/1uSGOwGqII8?si=NZE_Zlzr-JodGHT-" class="text-blue-600 hover:underline">JAVA</a></li>
+                         <li><a href="https://youtu.be/pHNbm-4reIc?si=6p_kvtsYrBMnmDq8" class="text-blue-600 hover:underline">DELD</a></li>
+                         <li><a href="https://youtu.be/q3Z3Qa1UNBA?si=CUTjsqLSM14Nli6e" class="text-blue-600 hover:underline">CN</a></li>
+                         <li><a href="https://youtu.be/xw_OuOhjauw?si=kiS7TU74_d9s-Z_1" class="text-blue-600 hover:underline">OS</a></li>
+                    </ul>
+                </div>
+                    </div>
+            </section>
+
+            <section id="progress-section" class="content-section hidden">
+                <h3 class="text-2xl font-semibold text-gray-800 mb-6">Progress Tracker</h3>
+                <div class="bg-white p-6 rounded-lg shadow space-y-4">
+                    <div>
+                        <h4 class="font-medium text-gray-700 mb-1">Overall Progress</h4>
+                        <div class="w-full bg-gray-200 rounded-full h-4">
+                            <div class="bg-green-500 h-4 rounded-full" style="width: 40%"></div>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-1">40% Complete (2 out of 5 modules)</p>
+                    </div>
+                     <div>
+                        <h4 class="font-medium text-gray-700 mb-1">Algebra Basics</h4>
+                        <div class="w-full bg-gray-200 rounded-full h-4">
+                            <div class="bg-blue-500 h-4 rounded-full" style="width: 100%"></div>
+                        </div>
+                         <p class="text-sm text-gray-500 mt-1">100% Complete</p>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-700 mb-1">Essay Writing Fundamentals</h4>
+                        <div class="w-full bg-gray-200 rounded-full h-4">
+                            <div class="bg-blue-500 h-4 rounded-full" style="width: 75%"></div>
+                        </div>
+                         <p class="text-sm text-gray-500 mt-1">75% Complete</p>
+                    </div>
+                     <div>
+                        <h4 class="font-medium text-gray-700 mb-1">Introduction to Calculus</h4>
+                        <div class="w-full bg-gray-200 rounded-full h-4">
+                            <div class="bg-blue-500 h-4 rounded-full" style="width: 0%"></div>
+                        </div>
+                         <p class="text-sm text-gray-500 mt-1">Not Started</p>
+                    </div>
+                    <button class="mt-4 border border-indigo-500 text-indigo-500 hover:bg-indigo-50 px-4 py-2 rounded">Set Learning Goals</button>
+                </div>
+            </section>
+
+            <section id="collaboration-section" class="content-section hidden">
+                 <h3 class="text-2xl font-semibold text-gray-800 mb-6">Collaboration Forum</h3>
+                 <div class="bg-white p-6 rounded-lg shadow space-y-4">
+                     <h4 class="text-lg font-semibold text-purple-700 mb-3">Recent Discussions</h4>
+                     <div class="border-b pb-3 mb-3">
+                         <p class="font-medium text-gray-800">Having trouble with derivatives in Calculus</p>
+                         <p class="text-sm text-gray-500">Started by Alex P. - 2 hours ago | 3 Replies</p>
+                         <a href="#" class="text-sm text-blue-600 hover:underline mt-1 inline-block">View Thread</a>
+                     </div>
+                     <div class="border-b pb-3 mb-3">
+                         <p class="font-medium text-gray-800">Tips for writing strong thesis statements?</p>
+                         <p class="text-sm text-gray-500">Started by Sarah K. - 1 day ago | 5 Replies</p>
+                         <a href="#" class="text-sm text-blue-600 hover:underline mt-1 inline-block">View Thread</a>
+                     </div>
+                     <button class="mt-4 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded">Start New Discussion</button>
+                 </div>
+            </section>
+
+            <section id="learning-path-section" class="content-section hidden">
+                 <h3 class="text-2xl font-semibold text-gray-800 mb-6">Personalized Learning Path</h3>
+                 <div class="bg-white p-6 rounded-lg shadow space-y-4">
+                     <h4 class="text-lg font-semibold text-orange-700 mb-3">Recommended For You</h4>
+                     <p class="text-gray-600 mb-4">Based on your progress in Algebra and Essay Writing, here are some suggested next steps:</p>
+                     <ul class="list-disc list-inside text-gray-700 space-y-2">
+                         <li>
+                             <strong>Topic:</strong> Introduction to Calculus
+                             <p class="text-sm text-gray-500">Builds on your Algebra knowledge.</p>
+                             <a href="#" data-section="tutorials" class="nav-link text-sm text-blue-600 hover:underline">Go to Tutorial</a>
+                         </li>
+                          <li>
+                             <strong>Topic:</strong> Advanced Essay Techniques
+                             <p class="text-sm text-gray-500">Refine your writing skills further.</p>
+                             <a href="#" data-section="tutorials" class="nav-link text-sm text-blue-600 hover:underline">Go to Tutorial</a>
+                         </li>
+                          <li>
+                             <strong>Resource:</strong> Khan Academy Physics
+                             <p class="text-sm text-gray-500">Explore related STEM fields.</p>
+                             <a href="#" data-section="resources" class="nav-link text-sm text-blue-600 hover:underline">See Resources</a>
+                         </li>
+                     </ul>
+                      <p class="text-xs text-gray-500 mt-6">*Personalization is simulated. A real system would use AI based on actual user activity.</p>
+                 </div>
+            </section>
+
+            <section id="gamification-section" class="content-section hidden">
+                 <h3 class="text-2xl font-semibold text-gray-800 mb-6">Achievements & Rewards</h3>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <div class="bg-white p-6 rounded-lg shadow text-center">
+                          <h4 class="text-lg font-semibold text-yellow-700 mb-2">Total Points</h4>
+                          <p class="text-4xl font-bold text-gray-800">150 <span class="lucide icon-star text-yellow-500"></span></p>
+                          <p class="text-sm text-gray-500 mt-2">Keep learning to earn more!</p>
+                     </div>
+                     <div class="bg-white p-6 rounded-lg shadow">
+                         <h4 class="text-lg font-semibold text-green-700 mb-3">Badges Earned</h4>
+                         <div class="flex flex-wrap gap-4 items-center">
+                             <div class="text-center p-2 border rounded-lg border-green-200 bg-green-50" title="Completed First Module">
+                                 <span class="lucide icon-badge-check text-3xl text-green-600"></span>
+                                 <p class="text-xs mt-1 text-gray-600">Module Master</p>
+                             </div>
+                             <div class="text-center p-2 border rounded-lg border-blue-200 bg-blue-50" title="Asked a Question in Chat">
+                                 <span class="lucide icon-badge-check text-3xl text-blue-600"></span>
+                                 <p class="text-xs mt-1 text-gray-600">Curious Learner</p>
+                             </div>
+                              <div class="text-center p-2 border rounded-lg border-gray-300 bg-gray-100 opacity-50" title="Complete 5 Modules (Locked)">
+                                 <span class="lucide icon-badge-check text-3xl text-gray-500"></span>
+                                 <p class="text-xs mt-1 text-gray-500">Tutorial Titan</p>
+                             </div>
+                             </div>
+                     </div>
+                 </div>
+            </section>
+
+        </div> <div id="chat-modal" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50 hidden p-4">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-lg flex flex-col" style="height: 70vh;">
+                <div class="flex justify-between items-center p-4 border-b">
+                    <h4 class="text-lg font-semibold text-gray-800 flex items-center">
+                        <span class="lucide icon-message-circle mr-2 text-blue-600"></span> Live Chat Support
+                    </h4>
+                    <button id="close-chat-button" class="text-gray-500 hover:text-red-600">
+                        <span class="lucide icon-x text-xl"></span>
+                    </button>
+                </div>
+                <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-2 flex flex-col">
+                    <div class="chat-bubble ai">Hello! How can I help you today?</div>
+                    </div>
+                <div class="p-4 border-t flex items-center">
+                    <input type="text" id="chat-input" class="flex-1 border border-gray-300 rounded-l-lg p-2 focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Ask a question...">
+                    <button id="send-chat-button" class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-r-lg">
+                        <span class="lucide icon-send"></span>
+                    </button>
+                </div>
+                 <p class="text-xs text-gray-500 text-center px-4 pb-2">AI responses are simulated and generic.</p>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // --- DOM Elements ---
+        const sidebar = document.getElementById('sidebar');
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const contentSections = document.querySelectorAll('.content-section');
+        const sectionTitle = document.getElementById('section-title');
+
+        // Grading Assistant Elements
+        const studentSubmissionEl = document.getElementById('studentSubmission');
+        const rubricEl = document.getElementById('rubric');
+        const gradeButton = document.getElementById('gradeButton');
+        const buttonText = document.getElementById('buttonText');
+        const buttonLoader = document.getElementById('buttonLoader');
+        const outputSection = document.getElementById('outputSection');
+        const gradeOutputEl = document.getElementById('gradeOutput');
+        const feedbackOutputEl = document.getElementById('feedbackOutput');
+        const errorMessageEl = document.getElementById('errorMessage');
+        const errorTextEl = document.getElementById('errorText');
+
+        // Chat Modal Elements
+        const chatButton = document.getElementById('chat-button');
+        const quickChatButton = document.getElementById('quick-chat-button');
+        const chatModal = document.getElementById('chat-modal');
+        const closeChatButton = document.getElementById('close-chat-button');
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const sendChatButton = document.getElementById('send-chat-button');
+
+
+        // --- State ---
+        let currentSection = 'dashboard'; // Default section
+
+        // --- Functions ---
+
+        /**
+         * Shows the specified content section and hides others.
+         * Updates the section title and active nav link.
+         * @param {string} sectionId - The ID of the section to show (e.g., 'tutorials').
+         */
+        function showSection(sectionId) {
+            // Hide all sections
+            contentSections.forEach(section => {
+                section.classList.add('hidden');
+            });
+
+            // Show the target section
+            const targetSection = document.getElementById(`${sectionId}-section`);
+            if (targetSection) {
+                targetSection.classList.remove('hidden');
+                currentSection = sectionId;
+
+                // Update title
+                const sectionName = sectionId.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                sectionTitle.textContent = sectionName;
+
+                // Update active nav link
+                navLinks.forEach(link => {
+                    link.classList.remove('bg-blue-600', 'font-semibold'); // Use a distinct active style if needed
+                    link.classList.remove('bg-indigo-600'); // Remove hover style if active
+                    if (link.dataset.section === sectionId) {
+                        link.classList.add('bg-blue-600', 'font-semibold');
+                    }
+                });
+
+                 // Close mobile sidebar if open
+                if (sidebar.classList.contains('open')) {
+                    sidebar.classList.remove('open');
+                    sidebarOverlay.style.display = 'none';
+                }
+
+            } else {
+                console.warn(`Section with ID ${sectionId}-section not found.`);
+                // Optionally show dashboard as fallback
+                 showSection('dashboard');
+            }
+        }
+
+        /**
+         * Toggles the mobile sidebar visibility.
+         */
+        function toggleSidebar() {
+             sidebar.classList.toggle('open');
+             if (sidebar.classList.contains('open')) {
+                 sidebarOverlay.style.display = 'block';
+             } else {
+                 sidebarOverlay.style.display = 'none';
+             }
+        }
+
+        // --- Grading Assistant Logic (Simulation) ---
+        function simulateGrading(submissionText, rubricText) {
+            // ... (Keep the same simulation logic as before) ...
+             if (!submissionText || !rubricText) return 0;
+            const submissionWords = submissionText.toLowerCase().split(/\s+/).filter(Boolean);
+            const rubricWords = rubricText.toLowerCase().split(/\s+/).filter(Boolean);
+            const lengthRatio = Math.min(1, submissionWords.length / (rubricWords.length * 1.5 + 1));
+            const lengthScore = lengthRatio * 40;
+            const rubricKeywords = new Set(rubricWords.filter(word => word.length > 3));
+            let matchCount = 0;
+            const uniqueSubmissionWords = new Set(submissionWords);
+            uniqueSubmissionWords.forEach(word => {
+                if (rubricKeywords.has(word)) matchCount++;
+            });
+            const keywordMatchRatio = rubricKeywords.size === 0 ? (matchCount > 0 ? 1 : 0) : Math.min(1, matchCount / rubricKeywords.size);
+            const keywordScore = keywordMatchRatio * 60;
+            const totalScore = Math.round(lengthScore + keywordScore);
+            return Math.min(100, Math.max(0, totalScore));
+        }
+
+        function generateFeedback(score, submissionText, rubricText) {
+            // ... (Keep the same simulation logic as before) ...
+            const rubricKeywords = rubricText.toLowerCase().split(/\s+/).filter(word => word.length > 4);
+            const randomKeyword = rubricKeywords.length > 0 ? rubricKeywords[Math.floor(Math.random() * rubricKeywords.length)] : "key concepts";
+            const strengths = score > 60 ? `One strength is the discussion around "${randomKeyword}". ` : "";
+            const weaknesses = score < 75 ? `Consider improving the depth regarding "${randomKeyword}" and ensuring all rubric points are fully addressed. ` : "";
+            if (score >= 90) return `Excellent work (Score: ${score})! ${strengths}Your submission clearly addresses all the key points and demonstrates a strong understanding. Keep up the great effort!`;
+            if (score >= 75) return `Good job (Score: ${score}). ${strengths}You've covered most aspects well. ${weaknesses}Focus on elaborating further to enhance the overall quality.`;
+            if (score >= 50) return `Solid effort (Score: ${score}). The submission covers some basic points. ${strengths}${weaknesses}Focus on elaborating more and ensuring all rubric points are addressed for a better score next time.`;
+            if (score >= 30) return `There's room for improvement (Score: ${score}). ${weaknesses}Please review the rubric carefully. Ensure your submission addresses the core requirements more directly. Let's work on building a stronger foundation.`;
+            return `The submission (Score: ${score}) appears to miss several key requirements. ${weaknesses}Please revisit the assignment instructions and the rubric, focusing on the main objectives. Don't hesitate to ask for clarification.`;
+        }
+
+        function showError(message) {
+            errorTextEl.textContent = message;
+            errorMessageEl.classList.remove('hidden');
+            outputSection.classList.add('hidden');
+        }
+
+        function hideError() {
+            errorMessageEl.classList.add('hidden');
+            errorTextEl.textContent = '';
+        }
+
+        // --- Chat Modal Logic (Simulation) ---
+        function openChat() {
+            chatModal.classList.remove('hidden');
+            chatInput.focus();
+        }
+
+        function closeChat() {
+            chatModal.classList.add('hidden');
+        }
+
+        function addChatMessage(message, sender = 'ai') {
+            const bubble = document.createElement('div');
+            bubble.classList.add('chat-bubble', sender);
+            bubble.textContent = message;
+            chatMessages.appendChild(bubble);
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function simulateAIChatResponse(userMessage) {
+             // --- Real Implementation Note ---
+             // In a real backend:
+             // 1. Send userMessage to Gemini API.
+             // 2. Ask Gemini to act as a helpful tutor/assistant.
+             // 3. Parse the response text.
+             // -----------------------------
+            const lowerMessage = userMessage.toLowerCase();
+            let response = "I'm sorry, I can only provide simulated responses. ";
+
+            if (lowerMessage.includes("hello") || lowerMessage.includes("hi")) {
+                response += "Hello there! How can I assist with your learning today?";
+            } else if (lowerMessage.includes("calculus")) {
+                response += "Calculus involves rates of change and accumulation. Key concepts include limits, derivatives, and integrals. Check the 'Tutorials' or 'Resources' section for more details!";
+            } else if (lowerMessage.includes("essay")) {
+                response += "For essays, focus on a strong thesis statement, clear topic sentences for each paragraph, supporting evidence, and smooth transitions. The 'Tutorials' section has a module on this.";
+            } else if (lowerMessage.includes("grade") || lowerMessage.includes("assignment")) {
+                 response += "You can use the 'Grading Assistant' tool in the sidebar to get simulated feedback on your assignments based on a rubric.";
+            } else if (lowerMessage.includes("thank")) {
+                 response += "You're welcome! Let me know if you have more questions.";
+            } else {
+                response += "Could you please rephrase your question or check the available sections like 'Tutorials' or 'Resources'?"
+            }
+            addChatMessage(response, 'ai');
+        }
+
+        function handleChatSend() {
+             const message = chatInput.value.trim();
+            if (message) {
+                addChatMessage(message, 'user');
+                chatInput.value = '';
+                // Simulate AI thinking time
+                setTimeout(() => {
+                    simulateAIChatResponse(message);
+                }, 800);
+            }
+        }
+
+
+        // --- Event Listeners ---
+
+        // Sidebar Navigation
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const sectionId = link.dataset.section;
+                if (sectionId) {
+                    showSection(sectionId);
+                }
+            });
+        });
+
+        // Mobile Menu Toggle
+        menuToggle.addEventListener('click', toggleSidebar);
+        sidebarOverlay.addEventListener('click', toggleSidebar); // Close sidebar when clicking overlay
+
+
+        // Grading Assistant Button
+        if (gradeButton) {
+            gradeButton.addEventListener('click', () => {
+                hideError();
+                const submission = studentSubmissionEl.value.trim();
+                const rubric = rubricEl.value.trim();
+
+                if (!submission) { showError('Please paste the student submission.'); studentSubmissionEl.focus(); return; }
+                if (!rubric) { showError('Please enter the grading rubric or key points.'); rubricEl.focus(); return; }
+
+                buttonText.classList.add('hidden');
+                buttonLoader.classList.remove('hidden');
+                gradeButton.disabled = true;
+                outputSection.classList.add('hidden');
+
+                console.log("Simulating call to backend API for grading...");
+                setTimeout(() => {
+                    try {
+                        const score = simulateGrading(submission, rubric);
+                        const feedback = generateFeedback(score, submission, rubric);
+                        gradeOutputEl.textContent = `${score} / 100`;
+                        feedbackOutputEl.textContent = feedback;
+                        outputSection.classList.remove('hidden');
+                    } catch (error) {
+                        console.error("Simulation failed:", error);
+                        showError(`An error occurred during simulation: ${error.message}`);
+                    } finally {
+                        buttonText.classList.remove('hidden');
+                        buttonLoader.classList.add('hidden');
+                        gradeButton.disabled = false;
+                        console.log("Grading simulation complete.");
+                    }
+                }, 1500);
+            });
+        }
+
+        // Chat Modal Buttons
+        chatButton.addEventListener('click', openChat);
+        quickChatButton.addEventListener('click', openChat); // Also open from dashboard button
+        closeChatButton.addEventListener('click', closeChat);
+        sendChatButton.addEventListener('click', handleChatSend);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleChatSend();
+            }
+        });
+
+
+        // --- Initial Setup ---
+        showSection(currentSection); // Show the default section on load
+
+
+    </script>
+
+</body>
+</html>
